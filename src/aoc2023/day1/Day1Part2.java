@@ -9,7 +9,6 @@ import java.util.Map;
 
 public class Day1Part2 {
     public static void main(String[] args) throws Exception {
-//        String inputPath = "input/2023/day1/testInput.txt";
         String inputPath = "input/2023/day1/input.txt";
 
         System.out.println(getSumOfCalibrationValues(inputPath));
@@ -36,41 +35,6 @@ public class Day1Part2 {
     }
 
     private static int extractCalibrationValueFromText(String calibrationText) {
-        char[] charArray = calibrationText.toCharArray();
-        int firstDigitIndex = charArray.length;
-        int lastDigitIndex = -1;
-        for (int i = 0; i < charArray.length; i++) {
-            if (firstDigitIndex == charArray.length && Character.isDigit(charArray[i])) {
-                firstDigitIndex = i;
-            }
-
-            if (lastDigitIndex == -1 && Character.isDigit(charArray[charArray.length - 1 - i])) {
-                lastDigitIndex = charArray.length - 1 - i;
-            }
-
-            if (firstDigitIndex != charArray.length && lastDigitIndex != -1) {
-                break;
-            }
-        }
-//        System.out.println("firstDigitIndex: " + firstDigitIndex + ", lastDigitIndex: " + lastDigitIndex);
-        // now we need to check are there any number-words between index 0 and firstDigitIndex - 1, if exist it will be firstDigitIndex
-        char firstDigit = searchDigitWords(calibrationText.substring(0, firstDigitIndex), false);
-        firstDigit = firstDigit == 'a' ? charArray[firstDigitIndex] : firstDigit;
-
-        // then check are there any number-words between index lastDigitIndex + 1 and charArray.length - 1, if exist it will be lastDigitIndex
-        char lastDigit = searchDigitWords(calibrationText.substring(lastDigitIndex + 1, charArray.length), true);
-        lastDigit = lastDigit == 'a' ? charArray[lastDigitIndex] : lastDigit;
-
-        String resultString = String.valueOf(firstDigit) + lastDigit;
-        try {
-            return Integer.parseInt(resultString);
-        } catch (NumberFormatException exp) {
-            System.out.println("Invalid calibrationText: " + calibrationText);
-            return 0;
-        }
-    }
-
-    private static char searchDigitWords(String calibrationText, boolean reverse) {
         Map<String, Character> digitWordMap = Map.of(
                 "zero", '0',
                 "one", '1',
@@ -84,48 +48,57 @@ public class Day1Part2 {
                 "nine", '9'
         );
 
-        Map<String, Character> digitWordReverseMap = Map.of(
-                "orez", '0',
-                "eno", '1',
-                "owt", '2',
-                "eerht", '3',
-                "ruof", '4',
-                "evif", '5',
-                "xis", '6',
-                "neves", '7',
-                "thgie", '8',
-                "enin", '9'
-        );
+        char firstDigit = 'a';
+        char lastDigit = 'a';
 
-        char result = 'a';
 
-        calibrationText = reverse ? reverseText(calibrationText) : calibrationText;
-        Map<String, Character> wordMap = reverse ? digitWordReverseMap : digitWordMap;
+        char[] charArray = calibrationText.toCharArray();
+        int textLength = charArray.length;
+//        System.out.println("textLength: " + textLength);
+        for (int i = 0; i < textLength; i++) {
+            if (firstDigit == 'a') {
+                if (Character.isDigit(charArray[i])) {
+                    firstDigit = charArray[i];
+                } else {
+                    for (Map.Entry<String, Character> entry : digitWordMap.entrySet()) {
+//                        System.out.println("i: " + i + ", Key: " + entry.getKey());
+                        if (
+                                (i <= textLength - entry.getKey().length()) &&
+                                        (entry.getKey().equals(calibrationText.substring(i, i + entry.getKey().length())))
+                        ) {
+                            firstDigit = entry.getValue();
+                        }
+                    }
+                }
+            }
 
-        int firstIndex = calibrationText.length();
-        for (Map.Entry<String, Character> entry: wordMap.entrySet()) {
-//            System.out.println("Key: " + entry.getKey() + ", index: " + calibrationText.indexOf(entry.getKey()));
-            int index = calibrationText.indexOf(entry.getKey());
-            if (index == 0) {
-                return entry.getValue();
-            } else if (index > 0 && index < firstIndex) {
-                firstIndex = index;
-                result = entry.getValue();
+            if (lastDigit == 'a') {
+                if (Character.isDigit(charArray[textLength - 1 - i])) {
+                    lastDigit = charArray[textLength - 1 - i];
+                } else {
+                    for (Map.Entry<String, Character> entry : digitWordMap.entrySet()) {
+//                        System.out.println("i: " + i + ", Key: " + entry.getKey());
+                        if (
+                                (i <= textLength - entry.getKey().length()) &&
+                                        (entry.getKey().equals(calibrationText.substring(textLength - i - entry.getKey().length() , textLength - i)))
+                        ) {
+                            lastDigit = entry.getValue();
+                        }
+                    }
+                }
+            }
+
+            if (firstDigit != 'a' && lastDigit != 'a') {
+                break;
             }
         }
 
-        return result;
-    }
-
-    private static String reverseText(String text) {
-        char[] charArray = text.toCharArray();
-
-        for (int i = 0, j = charArray.length - 1; i < j; i++, j--) {
-            char temp = charArray[i];
-            charArray[i] = charArray[j];
-            charArray[j] = temp;
+        String resultString = String.valueOf(firstDigit) + lastDigit;
+        try {
+            return Integer.parseInt(resultString);
+        } catch (NumberFormatException exp) {
+            System.out.println("Invalid calibrationText: " + calibrationText);
+            return 0;
         }
-
-        return new String(charArray);
     }
 }
